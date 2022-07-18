@@ -54,7 +54,9 @@ async function set_gstin_options(frm) {
 class PurchaseReconciliationTool {
     constructor(frm) {
         this.frm = frm;
+
         this.render_tab_group();
+        this.render_filters();
     }
 
     render_tab_group() {
@@ -96,13 +98,67 @@ class PurchaseReconciliationTool {
                     fieldname: "invoice_level",
                     options: "invoice_level",
                 },
+                {
+                    label: "Filters",
+                    fieldtype: "Column Break",
+                    fieldname: "column_break",
+                },
+                {
+                    label: "Filter",
+                    fieldtype: "HTML",
+                    fieldname: "filters_area",
+                },
             ],
             body: this.frm.get_field("summary_data").$wrapper,
             frm: this.frm,
         });
 
+        this.form = new frappe.ui.FieldGroup({
+            fields: [
+                {
+                    label: "Filter",
+                    fieldtype: "HTML",
+                    fieldname: "filters_area",
+                },
+            ],
+            body: this.frm.get_field("summary_data").$wrapper,
+            frm: this.frm,
+        })
+
         this.tabGroup.make();
+        this.form.make();
+        $(this.tabGroup.wrapper)
+            // .find(".filter-selector")
+            .css({
+                padding: 0,
+                width: "93%",
+                float: "left",
+                marginLeft: "-15px",
+                marginRight: "-15px"
+            });
         this.tabGroup.tabs[0].toggle(true);
+    }
+    render_filters() {
+        this.make_filter_list();
+    }
+
+    make_filter_list() {
+        this.filter_button = $(`<div class="filter-selector">
+            <button class="btn btn-default btn-sm filter-button">
+                <span class="filter-icon">
+                    ${frappe.utils.icon('filter')}
+                </span>
+                <span class="button-label hidden-xs">
+                    ${__("Filter")}
+                <span>
+            </button>
+        </div>`
+        ).appendTo(this.form.get_field('filters_area').$wrapper);
+
+        this.filter_list = new frappe.ui.FilterGroup({
+            doctype: this.frm.doctype,
+            filter_button: this.filter_button,
+        });
     }
 }
 
@@ -379,8 +435,8 @@ function update_progress(frm, method) {
             method == "update_api_progress"
                 ? __("Fetching data from GSTN")
                 : __("Updating Inward Supply for Return Period {0}", [
-                      data.return_period,
-                  ]);
+                    data.return_period,
+                ]);
 
         frm.dashboard.show_progress("Import GSTR Progress", current_progress, message);
         frm.page.set_indicator(__("In Progress"), "orange");
@@ -404,6 +460,25 @@ function update_progress(frm, method) {
             }, 1000);
         }
     });
+}
+
+const filters_section = class FilterArea {
+    constructor(list_view) {
+        this.list_view = list_view;
+        this.list_view.page.page_form.append(`<div class="standard-filter-section flex"></div>`);
+
+        const filter_area = this.list_view.hide_page_form
+            ? this.list_view.page.custom_actions
+            : this.list_view.page.page_form;
+
+        this.list_view.$filter_section = $('<div class="filter-section flex">').appendTo(
+            filter_area
+        );
+
+        this.$filter_list_wrapper = this.list_view.$filter_section;
+        this.trigger_refresh = true;
+        this.setup();
+    }
 }
 
 const purchase_reco_data_manager = class DataTableManager {
