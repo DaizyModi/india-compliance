@@ -93,6 +93,7 @@ jobs:
                   bash ${GITHUB_WORKSPACE}/.github/helper/install.sh
               env:
                   BRANCH: develop
+                  FRAPPE_BRANCH: version-14
             
             - name: Run Tests
               run: cd ~/frappe-bench/ && bench --site test_site run-tests --app india_compliance
