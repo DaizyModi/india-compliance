@@ -91,11 +91,6 @@ export default {
     };
   },
 
-  beforeRouteEnter(to, from, next) {
-    if (to.params.order) return next();
-    next({ name: "home", replace: true });
-  },
-
   computed: {
     billingGstin() {
       return this.billingDetails.billing_gstin;
@@ -141,45 +136,7 @@ export default {
   methods: {
     getReadableNumber,
     editAddress() {
-      const states = [
-        "Andaman and Nicobar Islands",
-        "Andhra Pradesh",
-        "Arunachal Pradesh",
-        "Assam",
-        "Bihar",
-        "Chandigarh",
-        "Chhattisgarh",
-        "Dadra and Nagar Haveli and Daman and Diu",
-        "Delhi",
-        "Goa",
-        "Gujarat",
-        "Haryana",
-        "Himachal Pradesh",
-        "Jammu and Kashmir",
-        "Jharkhand",
-        "Karnataka",
-        "Kerala",
-        "Ladakh",
-        "Lakshadweep Islands",
-        "Madhya Pradesh",
-        "Maharashtra",
-        "Manipur",
-        "Meghalaya",
-        "Mizoram",
-        "Nagaland",
-        "Odisha",
-        "Other Territory",
-        "Pondicherry",
-        "Punjab",
-        "Rajasthan",
-        "Sikkim",
-        "Tamil Nadu",
-        "Telangana",
-        "Tripura",
-        "Uttar Pradesh",
-        "Uttarakhand",
-        "West Bengal",
-      ]
+      const states = frappe.boot.india_state_options || [];
       const dialog = new frappe.ui.Dialog({
         title: "Edit Billing Address",
         fields: [
@@ -227,7 +184,7 @@ export default {
             fieldname: "state",
             fieldtype: "Autocomplete",
             default: this.state,
-            options: this.country.toLowerCase() == "india" ? states:[]
+            options: this.country.toLowerCase() === "india" ? states : []
           },
           {
             label: "Country",
@@ -236,7 +193,7 @@ export default {
             default: this.country,
             onchange(){
               // TODO: fix in frappe needed to update dialog options
-              this.value.toLowerCase() == "india" ?
+              this.value.toLowerCase() === "india" ?
               dialog.set_df_property("state","options", states):
               dialog.set_df_property("state", "options", [])
             }
@@ -333,6 +290,10 @@ export default {
         .querySelector("#payment-gateway iframe")
         .setAttribute("scrolling", "no");
     },
+  },
+
+  beforeRouteEnter(to) {
+    if (!to.params.order) return { name: "home", replace: true };
   },
 
   created() {
